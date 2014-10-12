@@ -1,10 +1,13 @@
+from __future__ import (absolute_import, division, print_function, unicode_literals)
 import logging
 import datetime
 import time
 import abc
+import os
+import tempfile
 
-import boundary_plugin
-import status_store
+from . import boundary_plugin
+from . import status_store
 
 '''
 If getting statistics from CloudWatch fails, we will retry up to this number of times before
@@ -52,7 +55,7 @@ class CloudwatchPlugin(object):
             for metric_list_item in metric_list:
                 # Do not report duplicate or past samples (note: we are comparing tuples here, which
                 # amounts to comparing their timestamps).
-                if reported_metrics.get(metric_key, None) >= metric_list_item:
+                if reported_metrics.get(metric_key, (datetime.datetime.min,)) >= metric_list_item:
                     continue
 
                 metric_timestamp, metric_value, metric_statistic = metric_list_item
