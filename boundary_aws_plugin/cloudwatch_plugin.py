@@ -2,24 +2,22 @@ from __future__ import (absolute_import, division, print_function, unicode_liter
 import logging
 import datetime
 import time
-import abc
-import os
-import tempfile
 
 from . import boundary_plugin
 from . import status_store
 
-'''
+"""
 If getting statistics from CloudWatch fails, we will retry up to this number of times before
 giving up and aborting the plugin.  Use 0 for unlimited retries.
-'''
+"""
 PLUGIN_RETRY_COUNT = 0
-'''
+"""
 If getting statistics from CloudWatch fails, we will wait this long (in seconds) before retrying.
 This value must not be greater than 30 seconds, because the Boundary Relay will think we've
 timed out and terminate us after 30 seconds of inactivity.
-'''
+"""
 PLUGIN_RETRY_DELAY = 5
+
 
 class CloudwatchPlugin(object):
     def __init__(self, cloudwatch_metrics_type, boundary_metric_prefix, status_store_filename):
@@ -28,9 +26,9 @@ class CloudwatchPlugin(object):
         self.status_store_filename = status_store_filename
 
     def get_metric_data_with_retries(self, *args, **kwargs):
-        '''
+        """
         Calls the get_metric_data function, taking into account retry configuration.
-        '''
+        """
         retry_range = xrange(PLUGIN_RETRY_COUNT) if PLUGIN_RETRY_COUNT > 0 else iter(int, 1)
         for _ in retry_range:
             try:
@@ -58,7 +56,8 @@ class CloudwatchPlugin(object):
 
                 metric_timestamp, metric_value, metric_statistic = metric_list_item
 
-                boundary_plugin.boundary_report_metric(self.boundary_metric_prefix + metric_name, metric_value, entity_name, metric_timestamp)
+                boundary_plugin.boundary_report_metric(self.boundary_metric_prefix + metric_name,
+                                                       metric_value, entity_name, metric_timestamp)
                 reported_metrics[metric_key] = metric_list_item
 
         status_store.save_status_store(self.status_store_filename, reported_metrics)
@@ -86,7 +85,8 @@ class CloudwatchPlugin(object):
             pass
         else:
             logging.error("Starting historical data collection from %s" % earliest_timestamp)
-            data = self.get_metric_data_with_retries(only_latest=False, start_time=earliest_timestamp, end_time=datetime.datetime.utcnow())
+            data = self.get_metric_data_with_retries(only_latest=False,
+                                                     start_time=earliest_timestamp, end_time=datetime.datetime.utcnow())
             self.handle_metrics(data, reported_metrics)
             logging.error("Historical data collection complete")
 
@@ -94,4 +94,3 @@ class CloudwatchPlugin(object):
             data = self.get_metric_data_with_retries()
             self.handle_metrics(data, reported_metrics)
             boundary_plugin.sleep_interval()
-
