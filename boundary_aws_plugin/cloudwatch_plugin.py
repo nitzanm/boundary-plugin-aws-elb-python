@@ -22,8 +22,6 @@ timed out and terminate us after 30 seconds of inactivity.
 PLUGIN_RETRY_DELAY = 5
 
 class CloudwatchPlugin(object):
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self, cloudwatch_metrics_type, boundary_metric_prefix, status_store_filename):
         self.cloudwatch_metrics_type = cloudwatch_metrics_type
         self.boundary_metric_prefix = boundary_metric_prefix
